@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天祥企業出勤點名系統</title>
+    <title>天翔企業出缺勤系統</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --soft-blue: #e3f2fd; --mint: #e8f5e9; --sakura: #fce4ec; --primary: #5c6bc0; --text: #4a4a4a; --white: #ffffff; --accent: #ffab91; }
         body { font-family: "Hiragino Kaku Gothic Pro", "Microsoft JhengHei", sans-serif; background: #fdfbfb; margin: 0; padding: 20px; color: var(--text); }
-        .container { max-width: 1150px; margin: auto; background: var(--white); padding: 35px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid var(--soft-blue); }
+        .container { max-width: 1250px; margin: auto; background: var(--white); padding: 35px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid var(--soft-blue); }
         h1 { text-align: center; color: var(--primary); font-size: 28px; letter-spacing: 2px; }
         .sync-status { text-align: right; font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold; }
         .tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
@@ -22,9 +22,10 @@
         .stat-card { background: var(--sakura); padding: 12px 20px; border-radius: 18px; border: 2px solid transparent; min-width: 100px; cursor: pointer; text-align: center; transition: 0.3s; }
         .stat-card.active { border-color: var(--primary); background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { padding: 15px; color: var(--primary); border-bottom: 2px solid var(--soft-blue); }
+        th { padding: 12px; color: var(--primary); border-bottom: 2px solid var(--soft-blue); font-size: 14px; }
         td { background: #fff; padding: 12px; text-align: center; border-radius: 10px; border: 1px solid #f0f0f0; }
-        input, select { padding: 10px; border: 2px solid var(--soft-blue); border-radius: 12px; outline: none; }
+        input, select { padding: 8px; border: 2px solid var(--soft-blue); border-radius: 10px; outline: none; }
+        .num-input { width: 60px; text-align: center; font-weight: bold; color: var(--primary); }
         .btn { padding: 10px 25px; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
         .btn-add { background: var(--accent); }
         .btn-del { background: #ffcfcf; color: #d32f2f; padding: 5px 15px; }
@@ -34,8 +35,8 @@
 <body>
 
 <div class="container">
-    <h1>🌸 天祥企業出勤點名系統</h1>
-    <div id="syncIndicator" class="sync-status">☁️ 同步中...</div>
+    <h1>🌸 天翔企業出缺勤系統</h1>
+    <div id="syncIndicator" class="sync-status">☁️ 正在連線雲端...</div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('attendanceView')">🎀 今日點名</button>
@@ -49,7 +50,17 @@
             <div id="groupStats" class="stat-grid"></div>
         </div>
         <table>
-            <thead><tr><th>組別</th><th>姓名</th><th>出勤狀態</th><th>任務完成</th><th>備註</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>組別</th>
+                    <th>姓名</th>
+                    <th>出勤狀態</th>
+                    <th>工作日誌</th>
+                    <th>帶客數</th>
+                    <th>帶客取消</th>
+                    <th>備註</th>
+                </tr>
+            </thead>
             <tbody id="attBody"></tbody>
         </table>
     </div>
@@ -65,8 +76,8 @@
         </div>
         
         <div style="display: flex; justify-content: flex-start; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <input type="text" id="memberSearchInput" class="search-box" placeholder="🔍 搜尋姓名或組別關鍵字..." oninput="renderMembers()">
-            <span style="color: #666; font-size: 14px;">(共 <span id="memberCount">0</span> 位)</span>
+            <input type="text" id="memberSearchInput" class="search-box" placeholder="🔍 搜尋姓名或組別..." oninput="renderMembers()">
+            <span style="color: #666; font-size: 14px;">(共計 <span id="memberCount">0</span> 名)</span>
         </div>
 
         <table>
@@ -77,13 +88,13 @@
 
     <div id="reportView" class="view">
         <div class="toolbar" style="background: var(--sakura); flex-direction: column; align-items: flex-start;">
-            <h3 style="margin: 0; color: var(--primary);">📊 數據統計與匯出</h3>
+            <h3 style="margin: 0; color: var(--primary);">📊 報表匯出與百分比統計</h3>
             
             <div style="margin-top: 15px; display: flex; gap: 20px; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; width: 100%;">
                 <div>
-                    <strong>📅 月考核：</strong>
+                    <strong>📅 月考核報表：</strong>
                     <input type="month" id="reportMonth">
-                    <button class="btn" style="background:var(--primary)" onclick="exportReport('month')">匯出月考核報表</button>
+                    <button class="btn" style="background:var(--primary)" onclick="exportReport('month')">匯出月考核(含取消率)</button>
                 </div>
             </div>
 
@@ -91,7 +102,7 @@
                 <div>
                     <strong>📅 年度統計：</strong>
                     <select id="reportYear" style="padding: 8px; border-radius: 10px;"></select>
-                    <button class="btn" style="background:#4db6ac" onclick="exportReport('year')">匯出年度出勤總表</button>
+                    <button class="btn" style="background:#4db6ac" onclick="exportReport('year')">匯出年度總表</button>
                 </div>
             </div>
         </div>
@@ -99,22 +110,21 @@
 </div>
 
 <script>
-    // 已自動填入您的雲端網址
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxW1fsf6_9kLIWuLRzTqBX7EOnBrqY3iAfkeRC_Wx5zKDXPx2f7RDCLwuXXujiccClIoA/exec'; 
 
     let appData = { members: [], records: {} };
     let currentFilterGroup = "";
 
     async function loadFromCloud() {
-        document.getElementById('syncIndicator').innerText = "☁️ 正在連線雲端資料庫...";
+        document.getElementById('syncIndicator').innerText = "☁️ 讀取雲端中...";
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
             const data = await response.json();
             appData = data || { members: [], records: {} };
-            document.getElementById('syncIndicator').innerText = "✅ 雲端同步成功";
+            document.getElementById('syncIndicator').innerText = "✅ 同步成功";
             renderAttendance(); renderMembers(); initYearSelect();
         } catch (e) { 
-            document.getElementById('syncIndicator').innerText = "❌ 離線模式 (使用本地暫存)";
+            document.getElementById('syncIndicator').innerText = "❌ 離線狀態";
             const local = localStorage.getItem('tx_backup');
             if(local) appData = JSON.parse(local);
             renderAttendance(); renderMembers(); initYearSelect();
@@ -123,11 +133,11 @@
 
     async function saveToCloud() {
         localStorage.setItem('tx_backup', JSON.stringify(appData));
-        document.getElementById('syncIndicator').innerText = "⏳ 儲存中...";
+        document.getElementById('syncIndicator').innerText = "⏳ 儲存至雲端...";
         try { 
             await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(appData) }); 
-            setTimeout(() => { document.getElementById('syncIndicator').innerText = "✅ 變更已儲存至雲端"; }, 800);
-        } catch (e) { document.getElementById('syncIndicator').innerText = "❌ 雲端儲存失敗"; }
+            setTimeout(() => { document.getElementById('syncIndicator').innerText = "✅ 儲存成功"; }, 800);
+        } catch (e) { document.getElementById('syncIndicator').innerText = "❌ 儲存失敗"; }
     }
 
     function switchTab(id) {
@@ -156,7 +166,7 @@
         );
         document.getElementById('memberCount').innerText = filteredMembers.length;
         body.innerHTML = filteredMembers.map((m) => {
-            const originalIndex = appData.members.findIndex(original => original.id === m.id);
+            const originalIndex = appData.members.findIndex(o => o.id === m.id);
             return `
             <tr>
                 <td><input type="text" value="${m.name}" onchange="updateMember(${originalIndex}, 'name', this.value)"></td>
@@ -175,7 +185,7 @@
     }
 
     function updateMember(i, f, v) { appData.members[i][f] = v; saveToCloud(); renderAttendance(); }
-    function deleteMember(i) { if(confirm("確定移除該成員？歷史資料將仍保存在報表中。")) { appData.members.splice(i, 1); saveToCloud(); renderMembers(); renderAttendance(); } }
+    function deleteMember(i) { if(confirm("確定移除？")) { appData.members.splice(i, 1); saveToCloud(); renderMembers(); renderAttendance(); } }
 
     function renderAttendance() {
         const date = document.getElementById('attDate').value;
@@ -185,7 +195,7 @@
         
         let gStats = {};
         appData.members.forEach(m => {
-            if(!appData.records[date][m.id]) appData.records[date][m.id] = { status: "正常出勤", done: true, note: "" };
+            if(!appData.records[date][m.id]) appData.records[date][m.id] = { status: "正常出勤", done: true, note: "", guests: 0, cancel: 0 };
             if (!gStats[m.group]) gStats[m.group] = { total: 0, present: 0 };
             gStats[m.group].total++;
             const status = appData.records[date][m.id].status;
@@ -208,17 +218,21 @@
                     ${['正常出勤','病假','事假','曠職','遲到','排休','特殊事假'].map(s => `<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
                 </select></td>
                 <td><input type="checkbox" ${r.done?'checked':''} onchange="updateAtt('${m.id}', 'done', this.checked)"></td>
-                <td><input type="text" value="${r.note}" placeholder="..." onchange="updateAtt('${m.id}', 'note', this.value)"></td>
+                <td><input type="number" class="num-input" value="${r.guests || 0}" onchange="updateAtt('${m.id}', 'guests', this.value)"></td>
+                <td><input type="number" class="num-input" value="${r.cancel || 0}" onchange="updateAtt('${m.id}', 'cancel', this.value)"></td>
+                <td><input type="text" value="${r.note || ''}" placeholder="備註..." onchange="updateAtt('${m.id}', 'note', this.value)"></td>
             </tr>`;
         }).join('');
     }
 
     function filterGroup(g) { currentFilterGroup = g; renderAttendance(); }
+    
     function updateAtt(mid, f, v) {
         const d = document.getElementById('attDate').value;
+        if(f === 'guests' || f === 'cancel') v = parseInt(v) || 0;
         appData.records[d][mid][f] = v;
         saveToCloud();
-        if(f !== 'note') renderAttendance();
+        if(f === 'status') renderAttendance();
     }
 
     function exportReport(type) {
@@ -226,31 +240,43 @@
         if(!target) return alert("請選擇日期範圍");
 
         const summary = appData.members.map(m => {
-            let s = { "正常": 0, "病假": 0, "事假": 0, "遲到": 0, "曠職": 0, "應完成": 0, "實完成": 0, "未完日期": [] };
+            let s = { "正常": 0, "病假": 0, "事假": 0, "遲到": 0, "曠職": 0, "應完": 0, "實完": 0, "總帶客": 0, "總取消": 0, "未完日期": [] };
             Object.keys(appData.records).filter(d => d.startsWith(target)).forEach(d => {
                 const r = appData.records[d][m.id];
                 if(r) {
                     const statusKey = r.status.substring(0,2);
                     if(s[statusKey] !== undefined) s[statusKey]++;
                     if(r.status !== "排休") { 
-                        s["應完成"]++; 
-                        if(r.done) s["實完成"]++; 
+                        s["應完"]++; 
+                        if(r.done) s["實完"]++; 
                         else s["未完日期"].push(d.replace(target+'-','')+"日"); 
+                        s["總帶客"] += (r.guests || 0);
+                        s["總取消"] += (r.cancel || 0);
                     }
                 }
             });
+
+            // 取消率計算：(總取消 / 總帶客)
+            let cancelRate = "0%";
+            if (s["總帶客"] > 0) {
+                cancelRate = ((s["總取消"] / s["總帶客"]) * 100).toFixed(1) + "%";
+            }
+
             return {
                 "姓名": m.name, "組別": m.group,
                 "正常出勤": s["正常"], "病假": s["病假"], "事假": s["事假"], "遲到": s["遲到"], "曠職": s["曠職"],
-                "任務完成率": s["應完成"] ? Math.round((s["實完成"]/s["應完成"])*100)+"%" : "0%",
-                "工作未完成日期登記": s["未完日期"].join(", ") || "無"
+                "日誌完成率": s["應完"] ? Math.round((s["實完"]/s["應完"])*100)+"%" : "0%",
+                "月累計帶客數": s["總帶客"],
+                "月累計取消數": s["總取消"],
+                "帶客取消率": cancelRate,
+                "工作未完日期": s["未完日期"].join(", ") || "全數完成"
             };
         });
 
         const wb = XLSX.utils.book_new();
-        const sheetName = type === 'month' ? `${target}月考核` : `${target}年度總表`;
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), sheetName);
-        XLSX.writeFile(wb, `天祥_${sheetName}.xlsx`);
+        const fileName = type === 'month' ? `天翔月報_${target}` : `天翔年報_${target}`;
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), "考核統計");
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
     }
 
     document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
